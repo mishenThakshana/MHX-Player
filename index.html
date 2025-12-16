@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MHX Player</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #000000;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 10px;
+            color: #e5e7eb;
+            overflow-y: auto;
+        }
+
+        .player-container {
+            background: #1e293b;
+            border-radius: 10px;
+            max-width: 360px;
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #334155;
+        }
+
+        .player-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .player-header h1 {
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 600;
+            flex: 1;
+            text-align: center;
+        }
+
+        .settings-btn {
+            background: transparent;
+            border: none;
+            color: #86868b;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            position: absolute;
+            right: 0;
+        }
+
+        .settings-btn:hover {
+            background: #e5e5ea;
+            color: #1d1d1f;
+        }
+
+        /* Settings Modal */
+        .settings-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .settings-modal.active {
+            display: flex;
+        }
+
+        .settings-content {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 20px;
+            width: 90%;
+            max-width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .settings-header h2 {
+            color: #1d1d1f;
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .close-settings {
+            background: transparent;
+            border: none;
+            color: #86868b;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .close-settings:hover {
+            background: #e5e5ea;
+            color: #1d1d1f;
+        }
+
+        .settings-section {
+            margin-bottom: 24px;
+        }
+
+        .settings-section h3 {
+            color: #1d1d1f;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .add-folder-btn {
+            background: #007aff;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            width: 100%;
+        }
+
+        .add-folder-btn:hover {
+            background: #0051d5;
+        }
+
+        .add-folder-btn:active {
+            background: #0040a8;
+        }
+
+        .folders-list {
+            margin-top: 12px;
+            font-size: 12px;
+            color: #86868b;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .folder-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 8px;
+            margin-bottom: 4px;
+            background: #f5f5f7;
+            border-radius: 6px;
+        }
+
+        .folder-item span {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .folder-item button {
+            background: #ff3b30;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            padding: 4px 10px;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .folder-item button:hover {
+            background: #d70015;
+        }
+
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+        }
+
+        .toggle-switch label {
+            color: #1d1d1f;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .toggle-switch input[type="checkbox"] {
+            width: 44px;
+            height: 24px;
+            appearance: none;
+            background: #e5e5ea;
+            border-radius: 12px;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .toggle-switch input[type="checkbox"]:checked {
+            background: #007aff;
+        }
+
+        .toggle-switch input[type="checkbox"]::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.2s ease;
+        }
+
+        .toggle-switch input[type="checkbox"]:checked::before {
+            transform: translateX(20px);
+        }
+
+        .current-song {
+            color: #94a3b8;
+            font-size: 12px;
+            margin-top: 8px;
+            min-height: 18px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .album-art {
+            width: 100%;
+            max-width: 200px;
+            height: 200px;
+            margin: 0 auto 15px;
+            background: #e5e5ea;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #86868b;
+            font-size: 48px;
+            border: 1px solid #d2d2d7;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .album-art img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+        }
+
+        .album-art.has-image img {
+            display: block;
+        }
+
+        .album-art.has-image span {
+            display: none;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .control-btn {
+            background: #334155;
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            color: #e5e7eb;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s ease;
+        }
+
+        .control-btn:hover {
+            background: #475569;
+        }
+
+        .control-btn:active {
+            background: #64748b;
+        }
+
+        .play-pause-btn {
+            width: 56px;
+            height: 56px;
+            font-size: 20px;
+            background: #3b82f6;
+            color: white;
+        }
+
+        .play-pause-btn:hover {
+            background: #2563eb;
+        }
+
+        .play-pause-btn:active {
+            background: #1d4ed8;
+        }
+
+        .progress-container {
+            margin-bottom: 12px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #334155;
+            border-radius: 2px;
+            overflow: hidden;
+            cursor: pointer;
+            margin-bottom: 6px;
+        }
+
+        .progress {
+            height: 100%;
+            background: #3b82f6;
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+
+        .time-info {
+            display: flex;
+            justify-content: space-between;
+            color: #94a3b8;
+            font-size: 11px;
+        }
+
+        .volume-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            padding: 10px;
+            background: #0f172a;
+            border-radius: 8px;
+        }
+
+        .volume-btn {
+            background: #334155;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            color: #e5e7eb;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .volume-btn:hover {
+            background: #475569;
+        }
+
+        .volume-btn:active {
+            background: #64748b;
+        }
+
+        .volume-slider-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .volume-slider {
+            flex: 1;
+            height: 4px;
+            background: #334155;
+            border-radius: 2px;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            background: #3b82f6;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .volume-slider::-webkit-slider-thumb:hover {
+            background: #2563eb;
+        }
+
+        .volume-slider::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            background: #3b82f6;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.2s ease;
+        }
+
+        .volume-slider::-moz-range-thumb:hover {
+            background: #2563eb;
+        }
+
+        .volume-value {
+            min-width: 35px;
+            text-align: right;
+            color: #94a3b8;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .playlist {
+            max-height: 200px;
+            overflow-y: auto;
+            border-top: 1px solid #334155;
+            padding-top: 12px;
+        }
+
+        .playlist-item {
+            padding: 8px 10px;
+            margin-bottom: 3px;
+            background: #0f172a;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .playlist-item:hover {
+            background: #1e293b;
+        }
+
+        .playlist-item.active {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .playlist-item-number {
+            font-weight: bold;
+            min-width: 25px;
+            font-size: 11px;
+        }
+
+        .playlist-item-name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 12px;
+        }
+
+        .loading {
+            text-align: center;
+            color: #94a3b8;
+            padding: 20px;
+        }
+
+        /* Scrollbar styling */
+        .playlist::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .playlist::-webkit-scrollbar-track {
+            background: #0f172a;
+            border-radius: 4px;
+        }
+
+        .playlist::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+
+        .playlist::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+    </style>
+</head>
+<body>
+    <div class="player-container">
+        <div class="player-header">
+            <h1>MHX Player</h1>
+            <button class="settings-btn" id="settingsBtn" title="Settings">⚙️</button>
+        </div>
+        <div class="current-song" id="currentSong">Click settings to add music folders</div>
+
+        <div class="album-art">
+            <span>♪</span>
+            <img id="albumArtImage" src="" alt="Album Art">
+        </div>
+
+        <div class="controls">
+            <button class="control-btn" id="prevBtn" title="Previous">⏮</button>
+            <button class="control-btn play-pause-btn" id="playPauseBtn" title="Play/Pause">▶</button>
+            <button class="control-btn" id="nextBtn" title="Next">⏭</button>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar">
+                <div class="progress" id="progress"></div>
+            </div>
+            <div class="time-info">
+                <span id="currentTime">0:00</span>
+                <span id="duration">0:00</span>
+            </div>
+        </div>
+
+        <div class="volume-container">
+            <button class="volume-btn" id="muteBtn" title="Mute/Unmute">🔊</button>
+            <div class="volume-slider-container">
+                <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="100" title="Volume">
+                <span class="volume-value" id="volumeValue">100%</span>
+            </div>
+        </div>
+
+        <div class="playlist" id="playlist"></div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="settings-modal" id="settingsModal">
+        <div class="settings-content">
+            <div class="settings-header">
+                <h2>Settings</h2>
+                <button class="close-settings" id="closeSettings">×</button>
+            </div>
+            
+            <div class="settings-section">
+                <h3>Music Folders</h3>
+                <button class="add-folder-btn" id="addFolderBtn">Add Music Folder</button>
+                <div class="folders-list" id="foldersList"></div>
+            </div>
+            
+            <div class="settings-section">
+                <h3>Display Options</h3>
+                <div class="toggle-switch">
+                    <label for="showAlbumArt">Show Album Art</label>
+                    <input type="checkbox" id="showAlbumArt" checked>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <audio id="audioPlayer" preload="metadata"></audio>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+        const path = require('path');
+
+        class MusicPlayer {
+            constructor() {
+                this.audio = document.getElementById('audioPlayer');
+                this.playlist = [];
+                this.currentIndex = 0;
+                this.isPlaying = false;
+                this.isMuted = false;
+                this.savedVolume = 100;
+                this.folders = [];
+                this.isElectron = typeof require !== 'undefined';
+                this.currentAlbumArt = null;
+
+                this.initializeElements();
+                this.attachEventListeners();
+                this.loadVolumeSettings();
+                this.loadAlbumArtPreference();
+                this.loadSavedFolders();
+                this.setupElectronListeners();
+                
+                if (!this.isElectron) {
+                    this.scanAndLoadSongs();
+                }
+            }
+
+            initializeElements() {
+                this.playPauseBtn = document.getElementById('playPauseBtn');
+                this.prevBtn = document.getElementById('prevBtn');
+                this.nextBtn = document.getElementById('nextBtn');
+                this.progressBar = document.getElementById('progressBar');
+                this.progress = document.getElementById('progress');
+                this.currentTimeEl = document.getElementById('currentTime');
+                this.durationEl = document.getElementById('duration');
+                this.currentSongEl = document.getElementById('currentSong');
+                this.playlistEl = document.getElementById('playlist');
+                this.muteBtn = document.getElementById('muteBtn');
+                this.volumeSlider = document.getElementById('volumeSlider');
+                this.volumeValue = document.getElementById('volumeValue');
+                this.addFolderBtn = document.getElementById('addFolderBtn');
+                this.foldersList = document.getElementById('foldersList');
+                this.albumArt = document.querySelector('.album-art');
+                this.albumArtImage = document.getElementById('albumArtImage');
+                this.settingsBtn = document.getElementById('settingsBtn');
+                this.settingsModal = document.getElementById('settingsModal');
+                this.closeSettings = document.getElementById('closeSettings');
+                this.showAlbumArtToggle = document.getElementById('showAlbumArt');
+            }
+
+            attachEventListeners() {
+                this.playPauseBtn.addEventListener('click', () => this.togglePlayPause());
+                this.prevBtn.addEventListener('click', () => this.playPrevious());
+                this.nextBtn.addEventListener('click', () => this.playNext());
+                this.progressBar.addEventListener('click', (e) => this.seek(e));
+                this.muteBtn.addEventListener('click', () => this.toggleMute());
+                this.volumeSlider.addEventListener('input', (e) => this.setVolume(e.target.value));
+                this.addFolderBtn.addEventListener('click', () => this.addFolder());
+                this.settingsBtn.addEventListener('click', () => this.openSettings());
+                this.closeSettings.addEventListener('click', () => this.closeSettingsModal());
+                this.settingsModal.addEventListener('click', (e) => {
+                    if (e.target === this.settingsModal) {
+                        this.closeSettingsModal();
+                    }
+                });
+                this.showAlbumArtToggle.addEventListener('change', (e) => {
+                    this.toggleAlbumArtDisplay(e.target.checked);
+                });
+                this.audio.addEventListener('timeupdate', () => this.updateProgress());
+                this.audio.addEventListener('loadedmetadata', () => this.updateDuration());
+                this.audio.addEventListener('ended', () => this.playNext());
+                this.audio.addEventListener('play', () => {
+                    this.isPlaying = true;
+                    this.updatePlayPauseButton();
+                    this.updateMediaSessionPlaybackState('playing');
+                });
+                this.audio.addEventListener('pause', () => {
+                    this.isPlaying = false;
+                    this.updatePlayPauseButton();
+                    this.updateMediaSessionPlaybackState('paused');
+                });
+                
+                // Setup media session (for notification controls)
+                this.setupMediaSession();
+            }
+
+            setupElectronListeners() {
+                if (!this.isElectron) return;
+
+                // Listen for tray controls
+                ipcRenderer.on('tray-play-pause', () => {
+                    this.togglePlayPause();
+                });
+
+                ipcRenderer.on('tray-next', () => {
+                    this.playNext();
+                });
+
+                ipcRenderer.on('tray-previous', () => {
+                    this.playPrevious();
+                });
+
+                // Listen for folder additions from menu
+                ipcRenderer.on('add-folders', (event, folderPaths) => {
+                    this.addFolders(folderPaths);
+                });
+            }
+
+            async addFolder() {
+                if (!this.isElectron) {
+                    alert('Folder selection is only available in the Electron app');
+                    return;
+                }
+
+                try {
+                    const folderPaths = await ipcRenderer.invoke('select-folders');
+                    if (folderPaths && folderPaths.length > 0) {
+                        this.addFolders(folderPaths);
+                    }
+                } catch (error) {
+                    console.error('Error selecting folders:', error);
+                }
+            }
+
+            async addFolders(folderPaths) {
+                for (const folderPath of folderPaths) {
+                    if (!this.folders.includes(folderPath)) {
+                        this.folders.push(folderPath);
+                        await this.scanFolder(folderPath);
+                    }
+                }
+                this.saveFolders();
+                this.updateFoldersList();
+                this.renderPlaylist();
+                
+                // Auto-play first song if playlist is not empty and no song is currently loaded
+                if (this.playlist.length > 0 && !this.audio.src) {
+                    this.loadSong(0);
+                    // Auto-play the first song
+                    this.audio.play().catch(err => {
+                        console.error('Error playing audio:', err);
+                    });
+                    this.isPlaying = true;
+                    this.updatePlayPauseButton();
+                }
+            }
+
+            async scanFolder(folderPath) {
+                try {
+                    const files = await ipcRenderer.invoke('scan-folder', folderPath);
+                    files.forEach(filePath => {
+                        if (!this.playlist.includes(filePath)) {
+                            this.playlist.push(filePath);
+                        }
+                    });
+                    // Sort playlist by number prefix
+                    this.playlist.sort((a, b) => {
+                        const aName = this.isElectron ? path.basename(a) : a.split('/').pop();
+                        const bName = this.isElectron ? path.basename(b) : b.split('/').pop();
+                        const aMatch = aName.match(/^(\d+)\./);
+                        const bMatch = bName.match(/^(\d+)\./);
+                        const aNum = aMatch ? parseInt(aMatch[1]) : 999;
+                        const bNum = bMatch ? parseInt(bMatch[1]) : 999;
+                        return aNum - bNum;
+                    });
+                } catch (error) {
+                    console.error('Error scanning folder:', error);
+                }
+            }
+
+            updateFoldersList() {
+                this.foldersList.innerHTML = '';
+                this.folders.forEach((folderPath, index) => {
+                    const folderItem = document.createElement('div');
+                    folderItem.className = 'folder-item';
+                    const folderName = this.isElectron ? path.basename(folderPath) : folderPath.split('/').pop();
+                    folderItem.innerHTML = `
+                        <span>${folderName}</span>
+                        <button onclick="musicPlayer.removeFolder(${index})">Remove</button>
+                    `;
+                    this.foldersList.appendChild(folderItem);
+                });
+            }
+
+            removeFolder(index) {
+                const removedFolder = this.folders[index];
+                this.folders.splice(index, 1);
+                // Remove songs from this folder from playlist
+                this.playlist = this.playlist.filter(songPath => {
+                    return !songPath.startsWith(removedFolder);
+                });
+                this.saveFolders();
+                this.updateFoldersList();
+                this.renderPlaylist();
+                
+                // If current song was removed, load first song
+                if (this.currentIndex >= this.playlist.length) {
+                    if (this.playlist.length > 0) {
+                        this.loadSong(0);
+                    } else {
+                        this.currentSongEl.textContent = 'No songs loaded';
+                        this.audio.src = '';
+                    }
+                }
+            }
+
+            saveFolders() {
+                if (this.isElectron) {
+                    localStorage.setItem('musicPlayerFolders', JSON.stringify(this.folders));
+                }
+            }
+
+            async loadSavedFolders() {
+                if (this.isElectron) {
+                    const saved = localStorage.getItem('musicPlayerFolders');
+                    if (saved) {
+                        try {
+                            this.folders = JSON.parse(saved);
+                            this.updateFoldersList();
+                            // Rescan all folders
+                            for (const folder of this.folders) {
+                                await this.scanFolder(folder);
+                            }
+                            this.renderPlaylist();
+                            
+                            // Auto-play first song if playlist is not empty
+                            if (this.playlist.length > 0) {
+                                this.loadSong(0);
+                                // Auto-play the first song on startup - wait for audio to be ready
+                                this.audio.addEventListener('loadedmetadata', () => {
+                                    this.audio.play().catch(err => {
+                                        console.error('Error playing audio:', err);
+                                    });
+                                    this.isPlaying = true;
+                                    this.updatePlayPauseButton();
+                                }, { once: true });
+                            }
+                        } catch (error) {
+                            console.error('Error loading saved folders:', error);
+                        }
+                    }
+                }
+            }
+
+            async scanAndLoadSongs() {
+                // This function is only used when running in a web browser (not Electron)
+                // In Electron, folders are added via the addFolder() function
+                try {
+                    // Try to parse directory listing (web browser fallback)
+                    const response = await fetch('./');
+                    const html = await response.text();
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const links = Array.from(doc.querySelectorAll('a'));
+                    
+                    const mp3Files = links
+                        .map(link => link.href)
+                        .filter(href => href.endsWith('.mp3'))
+                        .map(href => {
+                            const fileName = href.split('/').pop();
+                            const match = fileName.match(/^(\d+)\./);
+                            const number = match ? parseInt(match[1]) : 999;
+                            return { fileName, number, path: href };
+                        })
+                        .sort((a, b) => a.number - b.number)
+                        .map(item => item.path);
+
+                    if (mp3Files.length > 0) {
+                        this.playlist = mp3Files;
+                        this.renderPlaylist();
+                        if (this.playlist.length > 0) {
+                            this.loadSong(0);
+                        }
+                        return;
+                    }
+                } catch (error) {
+                    console.log('Directory listing failed, using fallback list...');
+                }
+
+                // Final fallback: use hardcoded list (for web browser testing)
+                this.loadSongsFromList();
+            }
+
+            loadSongsFromList() {
+                // Fallback: Create list of known files based on the directory structure
+                const songFiles = [
+                    '001.Sandun-Perera-Amuthuma Malak-Desawana-Music.mp3',
+                    '002.Sandun-Perera-Wedi Warusa-Desawana-Music.mp3',
+                    '003.Ayeth_Warak-Thibunanam_Hugak__Sandun_Perera_Sarigama_lk.mp3',
+                    '004.Pooja_Karannam-Pinwantha_Wu_Oya_Sandun_Perera_Sarigama_lk.mp3',
+                    '005.Adaraya_Agamaki_Dilshan_L_Silva_Sarigama_lk.mp3',
+                    '006.Warada_Piligannawa_Prageeth_Perera_Sarigama_lk.mp3',
+                    '007.Dukak_Danenna_Epa_Sandun_Perera_Sarigama_lk.mp3',
+                    '008.Nidukin_Inu_Mana_Dimanka_Wellalage_Sarigama_lk.mp3',
+                    '009.Awasana_Premayai_Dimanka_Wellalage_Sarigama_lk.mp3',
+                    '010.Adarei_Wasthu-Duka_Danena_Ayuru_Dimanka_Wellalage_Sarigama_lk.mp3',
+                    '011.Ahinsakawi-Dimanka Wellalage-www.song.lk.mp3',
+                    '012.Obamada_Me_Hithata_Mage_Dimanka_Wellalage_Sarigama_lk.mp3',
+                    '013.Asipiya-gasana-hama-thanama-dimanka-wellalage.mp3',
+                    '014.Asai_Pawasanna_Dimanka_Wellalage_Sarigama_lk.mp3',
+                    '015.durin-hinda-ma-dimanka-wellalage.mp3',
+                    '016.Kiyambu_Lathawe_Dimanka_Wellalage_Sarigama_lk.mp3',
+                    '017.Ma_Nisa_Pa_Sina_Dimanka_Wellalage_Sarigama_lk.mp3',
+                    '018.Sudu_Nangi-Duka_Ahana_Hitha_Niwana_Dimanka_Wellalage_Sarigama_lk.mp3',
+                    '019.Nodeka_Inna_Ba_Ruwan_Hettiarachchi_Sarigama_lk.mp3',
+                    '020.Kandulu_Binduwak_Nethu_Agin_Ruwan_Hettiarachchi_Sarigama_lk.mp3',
+                    '021.Suranganavi_Mage_Ruwan_Hettiarachchi_Sarigama_lk.mp3',
+                    '022.Dukama_Vindala_Oya_Hinda_Ruwan_Hettiarachchi_Sarigama_lk.mp3',
+                    '023.Duka_Wadi_Nethe_Ruwan_Hettiarachchi_Sarigama_lk.mp3',
+                    '024.Nodanuwath_Kamata_Ruwan_Hettiarachchi_Sarigama_lk.mp3',
+                    '025.Rawatuna Tharam-Ruwan Hettiarachchi-www.hirufm.lk.mp3',
+                    '026.Wen_Weela_Giyada_Ruwan_Hettiarachchi_Sarigama_lk.mp3',
+                    '027.Wen-wee-giyath-perada-ruwan-hettiarachchi.mp3',
+                    '028.Seetha_Maruthe_Ruwan_Hettiarachchi_Sarigama_lk.mp3',
+                    '029.Awa-se-ae-dura-giya-waramalee-ruwan-hettiarachchi.mp3',
+                    '030.Naari_Hangum_Ruwan_Hettiarachchi_Sarigama_lk.mp3'
+                ];
+
+                this.playlist = songFiles;
+                this.renderPlaylist();
+                if (this.playlist.length > 0) {
+                    this.loadSong(0);
+                }
+            }
+
+            renderPlaylist() {
+                this.playlistEl.innerHTML = '';
+                this.playlist.forEach((song, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'playlist-item';
+                    if (index === this.currentIndex) {
+                        item.classList.add('active');
+                    }
+
+                    const fileName = song.split('/').pop();
+                    const match = fileName.match(/^(\d+)\.(.+)/);
+                    const number = match ? match[1] : index + 1;
+                    const name = match ? match[2].replace('.mp3', '').replace(/_/g, ' ') : fileName.replace('.mp3', '');
+
+                    item.innerHTML = `
+                        <span class="playlist-item-number">${number}</span>
+                        <span class="playlist-item-name">${name}</span>
+                    `;
+
+                    item.addEventListener('click', () => this.loadSong(index));
+                    this.playlistEl.appendChild(item);
+                });
+            }
+
+            async loadSong(index) {
+                if (index < 0 || index >= this.playlist.length) return;
+
+                this.currentIndex = index;
+                const song = this.playlist[index];
+                // Handle file paths for Electron
+                if (this.isElectron && !song.startsWith('http') && !song.startsWith('file://')) {
+                    this.audio.src = 'file://' + song;
+                } else {
+                    this.audio.src = song;
+                }
+                const fileName = this.isElectron ? path.basename(song) : song.split('/').pop();
+                const songName = fileName.replace('.mp3', '').replace(/_/g, ' ');
+                this.currentSongEl.textContent = songName;
+                this.renderPlaylist();
+                
+                // Load album art first, then update media session with it
+                await this.loadAlbumArt(song);
+                
+                // Update media session metadata with current album art
+                this.updateMediaSession(songName, this.currentAlbumArt);
+                
+                if (this.isPlaying) {
+                    this.audio.play();
+                }
+            }
+
+            togglePlayPause() {
+                if (this.isPlaying) {
+                    this.audio.pause();
+                } else {
+                    this.audio.play();
+                }
+            }
+
+            updatePlayPauseButton() {
+                this.playPauseBtn.textContent = this.isPlaying ? '⏸' : '▶';
+            }
+
+            playPrevious() {
+                const newIndex = this.currentIndex > 0 ? this.currentIndex - 1 : this.playlist.length - 1;
+                this.loadSong(newIndex);
+                if (this.isPlaying) {
+                    this.audio.play();
+                }
+            }
+
+            playNext() {
+                const newIndex = (this.currentIndex + 1) % this.playlist.length;
+                this.loadSong(newIndex);
+                if (this.isPlaying) {
+                    this.audio.play();
+                }
+            }
+
+            seek(e) {
+                const rect = this.progressBar.getBoundingClientRect();
+                const pos = (e.clientX - rect.left) / rect.width;
+                this.audio.currentTime = pos * this.audio.duration;
+            }
+
+            updateProgress() {
+                if (this.audio.duration) {
+                    const percent = (this.audio.currentTime / this.audio.duration) * 100;
+                    this.progress.style.width = percent + '%';
+                    this.currentTimeEl.textContent = this.formatTime(this.audio.currentTime);
+                    
+                    // Update media session position state
+                    if ('mediaSession' in navigator && navigator.mediaSession.setPositionState) {
+                        try {
+                            navigator.mediaSession.setPositionState({
+                                duration: this.audio.duration,
+                                playbackRate: this.audio.playbackRate,
+                                position: this.audio.currentTime
+                            });
+                        } catch (e) {
+                            // Some browsers may not support setPositionState
+                        }
+                    }
+                }
+            }
+
+            updateDuration() {
+                if (this.audio.duration) {
+                    this.durationEl.textContent = this.formatTime(this.audio.duration);
+                    
+                    // Update media session position state when duration is known
+                    if ('mediaSession' in navigator && navigator.mediaSession.setPositionState) {
+                        try {
+                            navigator.mediaSession.setPositionState({
+                                duration: this.audio.duration,
+                                playbackRate: this.audio.playbackRate,
+                                position: this.audio.currentTime
+                            });
+                        } catch (e) {
+                            // Some browsers may not support setPositionState
+                        }
+                    }
+                }
+            }
+
+            formatTime(seconds) {
+                if (isNaN(seconds)) return '0:00';
+                const mins = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${mins}:${secs.toString().padStart(2, '0')}`;
+            }
+
+            loadVolumeSettings() {
+                // Load saved volume from localStorage
+                const savedVolume = localStorage.getItem('musicPlayerVolume');
+                if (savedVolume !== null) {
+                    this.setVolume(savedVolume);
+                } else {
+                    this.setVolume(100);
+                }
+            }
+
+            setVolume(value) {
+                const volume = parseInt(value) / 100;
+                this.audio.volume = volume;
+                this.volumeSlider.value = value;
+                this.volumeValue.textContent = value + '%';
+                
+                // Save to localStorage
+                localStorage.setItem('musicPlayerVolume', value);
+                
+                // Update mute button icon based on volume
+                if (volume === 0) {
+                    this.muteBtn.textContent = '🔇';
+                    this.isMuted = true;
+                } else if (volume < 0.5) {
+                    this.muteBtn.textContent = '🔉';
+                    this.isMuted = false;
+                } else {
+                    this.muteBtn.textContent = '🔊';
+                    this.isMuted = false;
+                }
+            }
+
+            toggleMute() {
+                if (this.isMuted || this.audio.volume === 0) {
+                    // Unmute: restore to saved volume or 50%
+                    const volumeToRestore = this.savedVolume > 0 ? this.savedVolume : 50;
+                    this.setVolume(volumeToRestore);
+                } else {
+                    // Mute: save current volume and set to 0
+                    this.savedVolume = parseInt(this.volumeSlider.value);
+                    this.setVolume(0);
+                }
+            }
+
+            setupMediaSession() {
+                if (!('mediaSession' in navigator)) return;
+
+                // Set up media session actions - IMPORTANT: Use arrow functions to preserve 'this'
+                navigator.mediaSession.setActionHandler('play', () => {
+                    this.audio.play().catch(err => console.error('Play error:', err));
+                });
+
+                navigator.mediaSession.setActionHandler('pause', () => {
+                    this.audio.pause();
+                });
+
+                navigator.mediaSession.setActionHandler('previoustrack', () => {
+                    this.playPrevious();
+                });
+
+                navigator.mediaSession.setActionHandler('nexttrack', () => {
+                    this.playNext();
+                });
+
+                navigator.mediaSession.setActionHandler('seekbackward', (details) => {
+                    const skipTime = details.seekOffset || 10;
+                    this.audio.currentTime = Math.max(0, this.audio.currentTime - skipTime);
+                });
+
+                navigator.mediaSession.setActionHandler('seekforward', (details) => {
+                    const skipTime = details.seekOffset || 10;
+                    this.audio.currentTime = Math.min(this.audio.duration, this.audio.currentTime + skipTime);
+                });
+
+                // Initial metadata
+                this.updateMediaSession('MHX Player');
+            }
+
+            updateMediaSession(title, albumArtDataUrl = null) {
+                if (!('mediaSession' in navigator)) return;
+
+                const songName = title || this.currentSongEl.textContent || 'MHX Player';
+                
+                // Prepare artwork array
+                let artwork = [];
+                
+                if (albumArtDataUrl) {
+                    // Use actual album art with multiple sizes for better compatibility
+                    artwork = [
+                        { src: albumArtDataUrl, sizes: '96x96', type: 'image/jpeg' },
+                        { src: albumArtDataUrl, sizes: '128x128', type: 'image/jpeg' },
+                        { src: albumArtDataUrl, sizes: '192x192', type: 'image/jpeg' },
+                        { src: albumArtDataUrl, sizes: '256x256', type: 'image/jpeg' },
+                        { src: albumArtDataUrl, sizes: '384x384', type: 'image/jpeg' },
+                        { src: albumArtDataUrl, sizes: '512x512', type: 'image/jpeg' }
+                    ];
+                } else {
+                    // Fallback placeholder
+                    artwork = [
+                        {
+                            src: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iIzAwN2FmZiIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LXNpemU9IjQ4IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPvCfjLU8L3RleHQ+PC9zdmc+',
+                            sizes: '200x200',
+                            type: 'image/svg+xml'
+                        }
+                    ];
+                }
+                
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: songName,
+                    artist: 'MHX Player',
+                    album: 'Music Collection',
+                    artwork: artwork
+                });
+            }
+
+            updateMediaSessionPlaybackState(state) {
+                if (!('mediaSession' in navigator)) return;
+
+                if (state === 'playing') {
+                    navigator.mediaSession.playbackState = 'playing';
+                } else if (state === 'paused') {
+                    navigator.mediaSession.playbackState = 'paused';
+                }
+            }
+
+            async loadAlbumArt(songPath) {
+                if (!this.isElectron) return;
+                
+                // Check if album art display is enabled
+                const showAlbumArt = localStorage.getItem('showAlbumArt') !== 'false';
+                if (!showAlbumArt) {
+                    this.currentAlbumArt = null;
+                    this.albumArtImage.src = '';
+                    this.albumArt.classList.remove('has-image');
+                    const span = this.albumArt.querySelector('span');
+                    if (span) span.style.display = 'flex';
+                    // Still update media session but without art
+                    const songName = this.currentSongEl.textContent || 'MHX Player';
+                    this.updateMediaSession(songName, null);
+                    return;
+                }
+
+                try {
+                    // Request album art from main process
+                    const artData = await ipcRenderer.invoke('get-album-art', songPath);
+                    
+                    if (artData && artData.data && artData.data.length > 0) {
+                        // Convert array to Buffer then to base64
+                        const Buffer = require('buffer').Buffer;
+                        const buffer = Buffer.from(artData.data);
+                        const base64 = buffer.toString('base64');
+                        const mimeType = artData.format || 'image/jpeg';
+                        const dataUrl = `data:${mimeType};base64,${base64}`;
+                        
+                        // Store album art data URL
+                        this.currentAlbumArt = dataUrl;
+                        
+                        // Update album art image
+                        this.albumArtImage.src = dataUrl;
+                        this.albumArt.classList.add('has-image');
+                        const span = this.albumArt.querySelector('span');
+                        if (span) span.style.display = 'none';
+                        
+                        // Update media session with album art
+                        const songName = this.currentSongEl.textContent || 'MHX Player';
+                        this.updateMediaSession(songName, dataUrl);
+                    } else {
+                        // No album art found, show placeholder
+                        this.currentAlbumArt = null;
+                        this.albumArtImage.src = '';
+                        this.albumArt.classList.remove('has-image');
+                        const span = this.albumArt.querySelector('span');
+                        if (span) span.style.display = 'flex';
+                        
+                        // Update media session without album art
+                        const songName = this.currentSongEl.textContent || 'MHX Player';
+                        this.updateMediaSession(songName, null);
+                    }
+                } catch (error) {
+                    console.error('Error loading album art:', error);
+                    // Show placeholder on error
+                    this.currentAlbumArt = null;
+                    this.albumArtImage.src = '';
+                    this.albumArt.classList.remove('has-image');
+                    const span = this.albumArt.querySelector('span');
+                    if (span) span.style.display = 'flex';
+                    
+                    // Update media session without album art
+                    const songName = this.currentSongEl.textContent || 'MHX Player';
+                    this.updateMediaSession(songName, null);
+                }
+            }
+
+            openSettings() {
+                this.settingsModal.classList.add('active');
+                this.updateFoldersList();
+            }
+
+            closeSettingsModal() {
+                this.settingsModal.classList.remove('active');
+            }
+
+            loadAlbumArtPreference() {
+                const showAlbumArt = localStorage.getItem('showAlbumArt') !== 'false';
+                this.showAlbumArtToggle.checked = showAlbumArt;
+                this.toggleAlbumArtDisplay(showAlbumArt);
+            }
+
+            toggleAlbumArtDisplay(show) {
+                localStorage.setItem('showAlbumArt', show);
+                if (!show) {
+                    this.albumArtImage.src = '';
+                    this.albumArt.classList.remove('has-image');
+                    const span = this.albumArt.querySelector('span');
+                    if (span) span.style.display = 'flex';
+                } else {
+                    // Reload album art for current song if enabled
+                    if (this.playlist.length > 0 && this.currentIndex >= 0) {
+                        this.loadAlbumArt(this.playlist[this.currentIndex]);
+                    }
+                }
+            }
+        }
+
+        // Initialize player when page loads
+        let musicPlayer;
+        window.addEventListener('DOMContentLoaded', () => {
+            musicPlayer = new MusicPlayer();
+        });
+    </script>
+</body>
+</html>
+
