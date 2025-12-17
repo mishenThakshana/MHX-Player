@@ -62,6 +62,25 @@ This will create platform-specific installers in the `dist` folder.
 - npm
 - Electron
 
+## Releases
+
+### Latest Version: v1.0.1
+
+Download the latest release for your platform:
+- **macOS (Apple Silicon)**: [MHX Player-1.0.0-arm64.dmg](dist/MHX%20Player-1.0.0-arm64.dmg)
+
+See [CHANGELOG.md](CHANGELOG.md) for full release history and details.
+
+## Roadmap
+
+Future features under consideration:
+- [ ] Shuffle mode (optional)
+- [ ] Repeat modes (track, playlist)
+- [ ] More audio format support (FLAC, WAV, OGG)
+- [ ] Equalizer
+- [ ] Playlist import/export
+- [ ] Windows and Linux builds
+
 ## License
 
 MIT
