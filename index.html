@@ -659,7 +659,11 @@
                 });
                 this.audio.addEventListener('timeupdate', () => this.updateProgress());
                 this.audio.addEventListener('loadedmetadata', () => this.updateDuration());
-                this.audio.addEventListener('ended', () => this.playNext());
+                this.audio.addEventListener('ended', () => {
+                    // Auto-play next song when current song ends
+                    this.isPlaying = true; // Ensure next song plays
+                    this.playNext();
+                });
                 this.audio.addEventListener('play', () => {
                     this.isPlaying = true;
                     this.updatePlayPauseButton();
